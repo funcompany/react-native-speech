@@ -1,6 +1,6 @@
 #import "SpeechSynthesizer.h"
-#import "RCTUtils.h"
-#import "RCTLog.h"
+#import <React/RCTUtils.h>
+#import <React/RCTLog.h>
 
 @implementation SpeechSynthesizer
 
