@@ -1,6 +1,6 @@
 {
   "name": "@funfunfunco/react-native-speech",
-  "version": "0.1.5",
+  "version": "0.1.7",
   "description": "A text-to-speech library for React Native.",
   "main": "SpeechSynthesizer.ios.js",
   "scripts": {

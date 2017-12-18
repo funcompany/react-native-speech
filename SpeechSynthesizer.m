@@ -11,13 +11,17 @@ RCT_EXPORT_METHOD(speakUtterance:(NSDictionary *)args callback:(RCTResponseSende
 {
     // Error if self.synthesizer was already initialized
     if (self.synthesizer) {
-        return callback(@[RCTMakeError(@"There is a speech in progress.  Use the `paused` method to know if it's paused.", nil, nil)]);
+        [self stopSpeakingAtBoundary];
     }
+
+    self.callback = callback;
 
     // Set args to variables
     NSString *text = args[@"text"];
     NSString *voice = args[@"voice"];
     NSNumber *rate = args[@"rate"];
+    NSNumber *enableBluetooth = args[@"enableBluetooth"];
+    if (enableBluetooth == nil) enableBluetooth = @0;
 
     // Error if no text is passed
     if (!text) {
@@ -49,18 +53,23 @@ RCT_EXPORT_METHOD(speakUtterance:(NSDictionary *)args callback:(RCTResponseSende
     self.synthesizer = [[AVSpeechSynthesizer alloc] init];
     self.synthesizer.delegate = self;
 
+    if ([enableBluetooth isEqualToNumber:@1]) {
+      NSError *error;
+      [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                       withOptions:AVAudioSessionCategoryOptionAllowBluetoothA2DP
+                                             error:&error];
+    }
+
     // Speak
     [self.synthesizer speakUtterance:utterance];
-
-    // Return that the speach has started
-    callback(@[[NSNull null], @true]);
 }
 
 // Stops synthesizer
 RCT_EXPORT_METHOD(stopSpeakingAtBoundary)
 {
     if (self.synthesizer) {
-        [self.synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
+      if (self.callback) self.callback(@[[NSNull null], @false]);
+      [self.synthesizer stopSpeakingAtBoundary:AVSpeechBoundaryImmediate];
         self.synthesizer = nil;
     }
 }
@@ -117,6 +126,7 @@ RCT_EXPORT_METHOD(speechVoices:(RCTResponseSenderBlock)callback)
 {
     NSLog(@"Speech finished");
     self.synthesizer = nil;
+    if (self.callback) self.callback(@[[NSNull null], @true]);
 }
 
 // Started Handler
